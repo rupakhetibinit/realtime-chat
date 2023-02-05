@@ -1,0 +1,17 @@
+{
+	"name": "chat_application",
+	"version": "1.0.0",
+	"description": "",
+	"main": "index.js",
+	"scripts": {
+		"dev": "concurrently \"pnpm run server:dev\" \"pnpm run client:dev\"",
+		"server:dev": "cd server && pnpm dev",
+		"client:dev": "cd client && pnpm dev"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "ISC",
+	"devDependencies": {
+		"concurrently": "^7.6.0"
+	}
+}
