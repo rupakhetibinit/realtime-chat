@@ -30,7 +30,10 @@ io.on('connection', (socket: Socket) => {
 
 	socket.on('newUser', (data: User) => {
 		console.log('a user just connected');
-		if (users.filter((i) => data.socketID === i.socketID).length === 0) {
+		if (
+			users.filter((i) => data.socketID === i.socketID).length === 0 &&
+			users.filter((i) => data.userName === i.userName).length === 0
+		) {
 			users.push(data);
 		}
 		console.log(users);
