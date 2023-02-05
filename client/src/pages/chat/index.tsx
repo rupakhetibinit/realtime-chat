@@ -16,6 +16,7 @@ const index = (props: Props) => {
 	const [messages, setMessages] = useState<Message[]>([]);
 	const [username, setUsername] = useState<string | null>(null);
 	const [loading, setLoading] = useState(true);
+	const lastMessageRef = useRef<HTMLDivElement>(null);
 	useEffect(() => {
 		const user = localStorage.getItem('username');
 		if (!user || user.length == 0) {
@@ -41,12 +42,23 @@ const index = (props: Props) => {
 	}, []);
 
 	useEffect(() => {
+		// 👇️ scroll to bottom every time messages change
+
+		lastMessageRef.current?.scrollIntoView({ behavior: 'smooth' });
+	}, [messages]);
+
+	useEffect(() => {
 		socket.on('messageResponse', (data: Message) => {
-			let newmessages = [...messages];
-			newmessages.push.apply(newmessages, [data]);
-			setMessages([...newmessages]);
+			// Stackoverflow solution for merging two arrays https://stackoverflow.com/a/60365470
+			const map = new Map();
+			messages.forEach((item) => map.set(item.id, item));
+			[data].forEach((item) =>
+				map.set(item.id, { ...map.get(item.id), ...item })
+			);
+			const mergedArr = Array.from(map.values());
+			setMessages([...mergedArr]);
 		});
-	}, []);
+	}, [messages]);
 
 	const onLeaveChat = () => {
 		try {
@@ -59,6 +71,15 @@ const index = (props: Props) => {
 	if (loading) {
 		return null;
 	}
+	const onAddMessage = () => {
+		socket.emit('message', {
+			message: message,
+			name: username,
+			socketID: socket.id,
+			id: uuidv4(),
+		});
+		setMessage('');
+	};
 	return (
 		<>
 			<Head>
@@ -73,20 +94,26 @@ const index = (props: Props) => {
 					<UserList socket={socket} />
 					<div className='flex flex-col w-full h-full'>
 						<div className='flex flex-row items-center justify-between'>
-							<p className='text-2xl'>Chattting right now {username}</p>
+							<p className='text-2xl'>Chatting right now</p>
 							<button
 								className='px-4 py-2 bg-red-400 hover:bg-red-600'
 								onClick={onLeaveChat}>
 								LEAVE CHAT
 							</button>
 						</div>
-						<div className='flex flex-col h-full space-y-5 border border-green-500 p-4 m-1'>
+						<div className='flex flex-col h-full space-y-5 border border-green-500 p-4 m-1 overflow-y-scroll'>
 							{messages.map(({ id, name, message }) => (
-								<div key={id}>
-									<div>{name}</div>
-									<div>{message}</div>
+								<div
+									className={clsx(
+										'bg-green-500 max-w-fit h-fit p-2',
+										name === username && 'bg-red-500 self-end'
+									)}
+									key={id}>
+									<div>{name === username ? 'You' : name}</div>
+									<div className='break-normal'>{message}</div>
 								</div>
 							))}
+							<div ref={lastMessageRef} />
 						</div>
 						<div className='flex space-x-2 m-1'>
 							<textarea
@@ -95,15 +122,7 @@ const index = (props: Props) => {
 								className='w-full resize-none p-2'
 							/>
 							<button
-								onClick={() => {
-									socket.emit('message', {
-										message: message,
-										name: username,
-										socketID: socket.id,
-										id: uuidv4(),
-									});
-									setMessage('');
-								}}
+								onClick={onAddMessage}
 								className='bg-green-400 text-white px-4 py-2'>
 								Send message
 							</button>
