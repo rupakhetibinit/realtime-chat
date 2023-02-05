@@ -1,11 +1,14 @@
+import useLocalStorage from '@/hooks/useLocalStorage';
 import Head from 'next/head';
-import Image from 'next/image';
-import { Inter } from '@next/font/google';
-import styles from '@/styles/Home.module.css';
-
-const inter = Inter({ subsets: ['latin'] });
+import { useEffect, useState } from 'react';
 
 export default function Home() {
+	const [username, setUsername] = useState('');
+	useEffect(() => {
+		let localusername = localStorage.getItem('username');
+		localusername = localusername ?? '';
+		setUsername(localusername);
+	}, []);
 	return (
 		<>
 			<Head>
@@ -15,7 +18,29 @@ export default function Home() {
 				<link rel='icon' href='/favicon.ico' />
 			</Head>
 			<main>
-				<div></div>
+				<div className='w-screen h-screen bg-gray-200 flex flex-col items-center justify-center space-y-5'>
+					<h1 className='font-bold text-2xl'>Choose your username</h1>
+					<div className='flex flex-col items-center space-y-5'>
+						<input
+							type='text'
+							minLength={6}
+							name='username'
+							id='username'
+							className='w-52 h-8 px-4 py-2'
+							value={username}
+							onChange={(e) => {
+								setUsername(e.target.value);
+							}}
+						/>
+						<button
+							className='bg-green-400 hover:bg-green-600 rounded-md px-4 py-2'
+							onClick={() => {
+								localStorage.setItem('username', username);
+							}}>
+							LOGIN
+						</button>
+					</div>
+				</div>
 			</main>
 		</>
 	);
