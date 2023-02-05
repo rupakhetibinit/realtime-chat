@@ -6,7 +6,8 @@
 	"scripts": {
 		"dev": "concurrently \"pnpm run server:dev\" \"pnpm run client:dev\"",
 		"server:dev": "cd server && pnpm dev",
-		"client:dev": "cd client && pnpm dev"
+		"client:dev": "cd client && pnpm dev",
+		"client": "cd client && pnpm run build && pnpm run start"
 	},
 	"keywords": [],
 	"author": "Binit Rupakheti",
