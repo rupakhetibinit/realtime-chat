@@ -1,7 +1,7 @@
 {
 	"name": "chat_application",
 	"version": "1.0.0",
-	"description": "",
+	"description": "A chat application built with nextjs and socketio",
 	"main": "index.js",
 	"scripts": {
 		"dev": "concurrently \"pnpm run server:dev\" \"pnpm run client:dev\"",
@@ -9,8 +9,8 @@
 		"client:dev": "cd client && pnpm dev"
 	},
 	"keywords": [],
-	"author": "",
-	"license": "ISC",
+	"author": "Binit Rupakheti",
+	"license": "BSD",
 	"devDependencies": {
 		"concurrently": "^7.6.0"
 	}
