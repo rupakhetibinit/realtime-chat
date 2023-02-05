@@ -1,7 +1,7 @@
 import useLocalStorage from '@/hooks/useLocalStorage';
 import Head from 'next/head';
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { redirect, useRouter } from 'next/navigation';
 export default function Home() {
 	const router = useRouter();
 	const [username, setUsername] = useState('');
@@ -9,6 +9,9 @@ export default function Home() {
 		let localusername = localStorage.getItem('username');
 		localusername = localusername ?? '';
 		setUsername(localusername);
+		if (localusername.length > 0) {
+			router.push('/chat');
+		}
 	}, []);
 	return (
 		<>
