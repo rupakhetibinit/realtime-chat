@@ -1,12 +1,19 @@
 import Head from 'next/head';
 import router from 'next/router';
-import React, { useEffect, useState } from 'react';
+import { v4 as uuidv4 } from 'uuid';
+import React, { useEffect, useRef, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
+import Message from '../../../../types/Message';
+import User from '../../../../types/User';
+import clsx from 'clsx';
+import UserList from '@/components/UserList';
 
 const socket = io('http://localhost:8000');
-
 type Props = {};
 const index = (props: Props) => {
+	const [message, setMessage] = useState('');
+	const [users, setUsers] = useState<User[]>([]);
+	const [messages, setMessages] = useState<Message[]>([]);
 	const [username, setUsername] = useState<string | null>(null);
 	const [loading, setLoading] = useState(true);
 	useEffect(() => {
@@ -19,13 +26,33 @@ const index = (props: Props) => {
 		}
 	}, []);
 	useEffect(() => {
-		socket.on('connect', () => console.log('connected'));
-		socket.emit('message', () => console.log('sent message'));
+		console.log('useeffect ran');
+		socket.connect();
+		socket.on('connect', () => {
+			socket.emit('newUser', {
+				userName: localStorage.getItem('username'),
+				socketID: socket.id,
+			});
+		});
+		console.log(socket.active);
+		return () => {
+			socket.disconnect();
+		};
 	}, []);
+
+	useEffect(() => {
+		socket.on('messageResponse', (data: Message) => {
+			let newmessages = [...messages];
+			newmessages.push.apply(newmessages, [data]);
+			setMessages([...newmessages]);
+		});
+	}, []);
+
 	const onLeaveChat = () => {
 		try {
 			localStorage.removeItem('username');
 			setUsername('');
+			socket.disconnect();
 			router.replace('/');
 		} catch (error) {}
 	};
@@ -43,14 +70,10 @@ const index = (props: Props) => {
 
 			<main>
 				<div className='h-screen bg-gray-200 flex p-5'>
-					<div className='flex flex-col px-6'>
-						<h1 className='font-bold text-2xl'>Active Users</h1>
-						<p>User 1</p>
-						<p>User 2</p>
-					</div>
+					<UserList socket={socket} />
 					<div className='flex flex-col w-full h-full'>
 						<div className='flex flex-row items-center justify-between'>
-							<p className='text-2xl'>Chattting right now</p>
+							<p className='text-2xl'>Chattting right now {username}</p>
 							<button
 								className='px-4 py-2 bg-red-400 hover:bg-red-600'
 								onClick={onLeaveChat}>
@@ -58,14 +81,30 @@ const index = (props: Props) => {
 							</button>
 						</div>
 						<div className='flex flex-col h-full space-y-5 border border-green-500 p-4 m-1'>
-							<p className='self-end'>Messages</p>
-							<p>Messages</p>
-							<p>Messages</p>
-							<p>Messages</p>
+							{messages.map(({ id, name, message }) => (
+								<div key={id}>
+									<div>{name}</div>
+									<div>{message}</div>
+								</div>
+							))}
 						</div>
 						<div className='flex space-x-2 m-1'>
-							<textarea className='w-full resize-none p-2' />
-							<button className='bg-green-400 text-white px-4 py-2'>
+							<textarea
+								value={message}
+								onChange={(e) => setMessage(e.target.value)}
+								className='w-full resize-none p-2'
+							/>
+							<button
+								onClick={() => {
+									socket.emit('message', {
+										message: message,
+										name: username,
+										socketID: socket.id,
+										id: uuidv4(),
+									});
+									setMessage('');
+								}}
+								className='bg-green-400 text-white px-4 py-2'>
 								Send message
 							</button>
 						</div>
